@@ -2,6 +2,7 @@
 
 
 import flask
+import flask.ext.restful as flask_restful
 import flask.ext.sqlalchemy as flask_sqlalchemy
 import logging
 import traceback
@@ -11,6 +12,7 @@ import backend.config as config
 
 app = flask.Flask(__name__)
 app.config.from_object('backend.config')
+api = flask_restful.Api(app)
 db = flask_sqlalchemy.SQLAlchemy(app)
 
 
@@ -47,11 +49,23 @@ def other_error(error):
     return error_handler(error, payload={'type': 'general error'})
 
 
-import backend.units.views
-app.register_blueprint(backend.units.views.units_bp)
+import backend.users.views
+api.add_resource(backend.users.views.User, '/api/users/<int:user_id>')
+api.add_resource(backend.users.views.UserList, '/api/users/')
+
+import backend.missions.views
+api.add_resource(
+        backend.missions.views.Mission,
+        '/api/users/<int:user_id>/missions/<int:mission_id>')
+api.add_resource(
+        backend.missions.views.MissionList,
+        '/api/users/<int:user_id>/missions/')
 
 import backend.quests.views
-app.register_blueprint(backend.quests.views.quests_bp)
-
-import backend.quest_questions.views
-app.register_blueprint(backend.quest_questions.views.quest_questions_bp)
+api.add_resource(
+        backend.quests.views.Quest,
+        '/api/users/<int:user_id>/missions/<int:mission_id>'
+        '/quests/<int:quest_id>')
+api.add_resource(
+        backend.quests.views.QuestList,
+        '/api/users/<int:user_id>/missions/<int:mission_id>/quests/')

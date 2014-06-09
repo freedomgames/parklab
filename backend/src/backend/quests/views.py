@@ -1,92 +1,90 @@
 """Views for supporting quest resources."""
 
 
-import json
 import flask
-import sqlalchemy
+import flask.ext.restful as restful
 
 import backend
-import backend.common.accepts as accepts
-import backend.quests.models as models
-
-MESSAGE_FOR_400 = 'Invalid field given, must be one of %s'
-MESSAGE_FOR_404 = 'No quest with unit id %s and quest id %s found.'
-
-quests_bp = flask.Blueprint(
-        'quests', __name__, url_prefix='/units/<int:unit_id>/quests')
+import backend.missions.models as mission_models
+import backend.quests.models as quest_models
+import backend.users.models as user_models
+import backend.common.resource as resource
+import sqlalchemy
 
 
-@quests_bp.route('/', methods=('POST',))
-def new_quest(unit_id):
-    """Add a new quest to the given unit."""
-    data = {field: flask.request.json.get(field) for
-            field in models.Quest.create_fields}
-    data['unit_id'] = unit_id
+class QuestBase(object):
+    """Provide a common as_dict method."""
 
-    quest = models.Quest(**data)
-    backend.db.session.add(quest)
-    backend.db.session.commit()
+    view_fields = (
+            'id', 'name', 'description', 'icon_url', 'user_id', 'mission_id')
 
-    response = flask.jsonify(quest.as_dict())
-    response.status_code = 201
-    response.headers['Location'] = quest.url
-    return response
+    def as_dict(self, quest, user_id, mission_id, quest_id):
+        """Return a serializable dictionary representing the given quest."""
+        resp = {field: getattr(quest, field) for field in self.view_fields}
+        resp['url'] = backend.api.url_for(
+                Quest, user_id=user_id, mission_id=mission_id, quest_id=quest_id)
+        return resp
 
 
-@quests_bp.route('/', methods=('GET',))
-def get_quests(unit_id):
-    """Get all of the quests attached to the given unit."""
-    quests = models.Quest.query.filter_by(unit_id=unit_id).all()
+class Quest(QuestBase, resource.SimpleResource):
+    """Resource for working with a single quest."""
 
-    if accepts.wants_json():
-        return flask.Response(
-                json.dumps([quest.as_dict() for quest in quests]),
-                mimetype='application/json')
-    else:
-        return flask.render_template('quest_list.html', quests=quests)
+    parser = resource.ProvidedParser()
+    parser.add_argument('name', type=str)
+    parser.add_argument('description', type=str)
+    parser.add_argument('icon_url', type=str)
 
+    @staticmethod
+    def query(user_id, mission_id, quest_id):
+        """Return the query to select the quest with the given ids."""
+        subquery = backend.db.session.query(mission_models.Mission.id)
+        subquery = subquery.filter_by(user_id=user_id, id=mission_id)
+        subquery = subquery.subquery()
 
-@quests_bp.route('/<int:quest_id>/', methods=('GET',))
-def get_quest(unit_id, quest_id):
-    """Get the quest with the given id."""
-    quest = models.Quest.query.options(
-            sqlalchemy.orm.joinedload('questions')).filter_by(
-                unit_id=unit_id, id_=quest_id).first()
-    if quest is None:
-        return flask.make_response(MESSAGE_FOR_404 % (unit_id, quest_id), 404)
-    elif accepts.wants_json():
-        return flask.jsonify(quest.as_dict(with_questions=True))
-    else:
-        return flask.render_template('quest.html', quest=quest)
+        query = quest_models.Quest.query
+        query = query.filter_by(id=quest_id)
+        query = query.filter(quest_models.Quest.mission_id.in_(subquery))
+
+        return query
 
 
-@quests_bp.route('/<int:quest_id>/', methods=('PUT',))
-def update_quest(unit_id, quest_id):
-    """Update the quest with the given id."""
-    update = flask.request.json
+class QuestList(QuestBase, restful.Resource):
+    """Resource for working with collections of quests."""
 
-    if any(field not in models.Quest.editable_fields for
-            field in update.iterkeys()):
-        msg = MESSAGE_FOR_400 % ', '.join(models.Quest.editable_fields)
-        return flask.make_response(msg, 400)
-    else:
-        rows_updated = models.Quest.query.filter_by(
-                unit_id=unit_id, id_=quest_id).update(update)
-        backend.db.session.commit()
-        if not rows_updated:
-            return flask.make_response(
-                    MESSAGE_FOR_404 % (unit_id, quest_id), 404)
+    parser = resource.ProvidedParser()
+    parser.add_argument('name', type=str, required=True)
+    parser.add_argument('description', type=str, required=True)
+    parser.add_argument('icon_url', type=str)
+
+    def post(self, user_id, mission_id):
+        """Create a new quest and link it to its creator and mission."""
+        # make sure the user_id and mission_id are actually linked
+        query = mission_models.Mission.query.filter_by(
+                user_id=user_id, id=mission_id)
+        if not query.count():
+            return flask.Response('', 404)
         else:
-            return flask.make_response('OK', 200)
+            args = self.parser.parse_args()
+            args['user_id'] = user_id
+            args['mission_id'] = mission_id
+            quest = quest_models.Quest(**args)
 
+            backend.db.session.add(quest)
+            backend.db.session.commit()
 
-@quests_bp.route('/<int:quest_id>/', methods=('DELETE',))
-def delete_quest(unit_id, quest_id):
-    """Delete the quest with the given id."""
-    rows_deleted = models.Quest.query.filter_by(
-            unit_id=unit_id, id_=quest_id).delete()
-    backend.db.session.commit()
-    if not rows_deleted:
-        return flask.make_response(MESSAGE_FOR_404 % (unit_id, quest_id), 404)
-    else:
-        return flask.make_response('OK', 200)
+            args['id'] = quest.id
+
+            return args
+
+    def get(self, user_id, mission_id):
+        """Return a list of quests linked to the given user_id."""
+        query = quest_models.Quest.query
+        query = query.join(
+                quest_models.Quest.mission, mission_models.Mission.user)
+        query = query.filter(
+                user_models.User.id == user_id,
+                mission_models.Mission.id == mission_id)
+        quests = query.all()
+
+        return {'quests': [self.as_dict(quest, user_id, mission_id, quest.id) for
+            quest in quests]}
