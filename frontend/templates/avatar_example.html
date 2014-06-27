@@ -1,0 +1,59 @@
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+<script src="{{ url_for('static', filename='s3upload.js') }}"></script>
+
+<input type="file" id="file"/>
+<p id="status">Please select a file</p>
+<div id="preview"><img src="{{ avatar_url }}"></div>
+
+<form id="target">
+  <input type="submit" value="Update avatar"/>
+</form>
+
+<script>
+  var avatar_url = {{ avatar_url|tojson }};
+
+  var s3_upload = function() {
+    var s3upload = new S3Upload({
+        file_dom_selector: 'file',
+        s3_sign_put_url: '{{ url_for("s3.sign_avatar_upload") }}',
+
+        onProgress: function(percent, message) {
+            $('#status').html('Upload progress: ' + percent + '%' + message);
+        },
+        onFinishS3Put: function(url) {
+            $('#status').html('Upload completed. Uploaded to: '+ url);
+            $("#preview").html('<img src="'+url+'" style="width:300px;" />');
+            avatar_url = url;
+        },
+        onError: function(status) {
+            $('#status').html('Upload error: ' + status);
+        }
+    });
+  };
+
+  var update_user = function() {
+    var update = {
+      name: {{ name|tojson }},
+      email: {{ email|tojson }},
+      description: {{ description|tojson }},
+      avatar_url: avatar_url
+    };
+    $.ajax({
+      url: {{ user_url|tojson }},
+      type: 'PUT',
+      contentType: "application/json",
+      data: JSON.stringify(update),
+      success: function() { $('#status').html('Saved!'); },
+      error: function() { $('#status').html('Error Saving'); }
+    });
+  };
+
+  $("#file").change(s3_upload);
+
+  $("#target").submit(function(event) {
+    event.preventDefault();
+    update_user();
+  });
+
+</script>
