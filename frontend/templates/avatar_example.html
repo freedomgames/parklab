@@ -1,7 +1,3 @@
-<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
-<script src="{{ url_for('static', filename='s3upload.js') }}"></script>
-
 <input type="file" id="file"/>
 <p id="status">Please select a file</p>
 <div id="preview"><img src="{{ avatar_url }}"></div>
@@ -10,25 +6,43 @@
   <input type="submit" value="Update avatar"/>
 </form>
 
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 <script>
   var avatar_url = {{ avatar_url|tojson }};
 
-  var s3_upload = function() {
-    var s3upload = new S3Upload({
-        file_dom_selector: 'file',
-        s3_sign_put_url: '{{ url_for("s3.sign_avatar_upload") }}',
+  var createCORSRequest = function(method, url) {
+    var xhr = new XMLHttpRequest();
+    if ("withCredentials" in xhr) {
+      // Check if the XMLHttpRequest object has a "withCredentials" property.
+      // "withCredentials" only exists on XMLHTTPRequest2 objects.
+      xhr.open(method, url, true);
+    } else if (typeof XDomainRequest != "undefined") {
+      // Otherwise, check for XDomainRequest.
+      // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+      xhr = new XDomainRequest();
+      xhr.open(method, url);
+    } else {
+      // Otherwise, CORS is not supported by the browser.
+      throw new Error('CORS not supported');
+    }
+    return xhr;
+  };
 
-        onProgress: function(percent, message) {
-            $('#status').html('Upload progress: ' + percent + '%' + message);
-        },
-        onFinishS3Put: function(url) {
-            $('#status').html('Upload completed. Uploaded to: '+ url);
-            $("#preview").html('<img src="'+url+'" style="width:300px;" />');
-            avatar_url = url;
-        },
-        onError: function(status) {
-            $('#status').html('Upload error: ' + status);
-        }
+  var s3_upload = function() {
+    var file = document.getElementById('file').files[0];
+    $.ajax({
+      url: '{{ url_for("s3.sign_avatar_upload") }}',
+      data: {file_name: 'avatar', mime_type: file.type},
+      success: function(response) {
+        var xhr = createCORSRequest('PUT', response.signed_request, true);
+        xhr.setRequestHeader('Content-Type', file.type);
+        xhr.setRequestHeader('x-amz-acl', 'public-read');
+        xhr.onload = function() {
+          avatar_url = response.url;
+          $("#preview").html('<img src="' + avatar_url +'"/>');
+        };
+        xhr.send(file);
+      }
     });
   };
 
