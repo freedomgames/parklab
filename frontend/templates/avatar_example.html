@@ -31,8 +31,8 @@
   var s3_upload = function() {
     var file = document.getElementById('file').files[0];
     $.ajax({
-      url: '{{ url_for("s3.sign_avatar_upload") }}',
-      data: {file_name: 'avatar', mime_type: file.type},
+      url : '/v1/users/{{ user_id }}/avatar/avatar_image',
+      data: {mime_type: file.type},
       success: function(response) {
         var xhr = createCORSRequest('PUT', response.signed_request, true);
         xhr.setRequestHeader('Content-Type', file.type);
