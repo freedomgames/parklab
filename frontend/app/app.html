@@ -14,17 +14,10 @@
         <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.0-beta.3/angular-route.js"></script>
         <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
         <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-
-        <script>
-            var user_id = {{ user_id|tojson }}
-            var user_name = {{ user_name|tojson }}
-            var user_email = {{ user_email|tojson }}
-            var user_url = {{ user_url|tojson }}
-        </script>
     </head>
 
     <body class="{{pageLocation}}">
-        <div ng-include src=" 'header/header.html' " ng-controller="HeaderCtrl"></div>
+        <div ng-include src=" 'static/header/header.html' " ng-controller="HeaderCtrl"></div>
 
         <p>Hello World!</p>
         <p>It's gonna be a bright, bright and sunshiney day!</p>
@@ -32,14 +25,14 @@
         <div ng-view></div>
 
         <!-- Our Scripts -->
-        <script src="planet_app.js"></script>
+        <script src="static/planet_app.js"></script>
 
         <!-- Abstracted -->
-        <script src="abstracted/getterFactory.js"></script>
-        <script src="abstracted/setterFactory.js"></script>
+        <script src="static/abstracted/getterFactory.js"></script>
+        <script src="static/abstracted/setterFactory.js"></script>
 
         <!-- Header -->
-        <script src="header/headerctrl.js"></script>
+        <script src="static/header/headerctrl.js"></script>
 
     </body>
 </html>
