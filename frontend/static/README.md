@@ -20,3 +20,13 @@ Please don't fill this directory with any other static content.
 Put things like images in S3 and use their S3 URI's --
 no need to balloon the repo size with a bunch of images
 that will be served elsewhere.
+
+###### Note from Maia:
+
+All files included in this directory are DEVELOPMENT only.
+All files (CSS, JS, etc.) will be concatenated & minified,
+pushed to Amazon, and served via CDN for production.
+When we make a production version of this code,
+all those changes will be implemented.
+
+For the time being, this hosts all the source code. Go nuts! For now.
