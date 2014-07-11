@@ -26,25 +26,25 @@ The file structure for the frontend chunk of this repo is currently as follows:
 
     frontend
     |
-    |--- static
-    |      |
-    |      |--- featurename
-    |      |      |
-    |      |      |--- controller (js)
-    |      |      |
-    |      |      |--- view (html)
-    |      |      |
-    |      |      |--- styles (css)
-    |      |
-    |      |--- vendors (includes)
-    |
-    |--- templates
-            |
-            |--- app.html (main html file)
-            |
-            |--- index.html (welcome page)
+    |--- app
+           |
+           |--- app.html (main html file)
+           |
+           |--- index.html (welcome page)
+           |
+           |--- featurename
+           |      |
+           |      |--- controller (js)
+           |      |
+           |      |--- view (html)
+           |      |
+           |      |--- styles (css)
+           |
+           |--- vendors (includes)
 
-If you have any questions about this file structure, ask Maia. If you are curious about the /static subdirectory, please see its README.
+If you have any questions about this file structure, ask Maia.
+Please read [this doc](app/README.md) to understand how to reference
+assets with src links during development and in production.
 
 ## Contributing
 
