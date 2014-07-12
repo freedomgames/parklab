@@ -50,11 +50,13 @@ assets with src links during development and in production.
 
 Some notes on contributing to the frontend:
 
+* Please follow this style guide as much as possible, save for the file structure (see above): https://github.com/mgechev/angularjs-style-guide
+
 * When you have completed a feature and you'd like it to be included in the main repo for everyone to pull into their versions, please create a pull request on the main repo (freedomgames/Planet-Lab). (**Make sure you are pulling FROM your repo TO the main one!** Not that it truly matters, but the other way around simply won't work. Double-check before you submit the pull request that changes are flowing the right way!)
 
 * If you have time, please comment on other people's pull requests. (However, I am *extremely* terrible at this. So.)
 
-* Re: code style, I don't particularly care whether you like 4 space tabs or not (4 is perfect for me) or what code editor you use. If you're going to use a code editor that injects strange folders (lovingly side-eyeing _you_, JetBrains), please add those folders to your personal .gitignore before you commit any of those shenanigans. If someone else opens up the repo with your strange files in them, things could get weird. Real weird.
+* Re: code style, please use four spaces (not tabs) for consistency's sake. I don't care what code editor you use, however, but if you're going to use a code editor that injects strange folders (lovingly side-eyeing _you_, JetBrains), please add those folders to your personal .gitignore before you commit any of those shenanigans. If someone else opens up the repo with your strange files in them, things could get weird. Real weird.
 
 * Please be kind about your whitespace. Don't overdo it, but don't try to minify it, either. We'll take care of that in the end. Just make it legible. Please?
 
@@ -65,9 +67,3 @@ Some notes on contributing to the frontend:
 **PLEASE MAKE SURE YOU'RE PULLING INTO YOUR FORK OFTEN!** Seriously, work with the latest code! Before you do anything, merge the main repo into yours, and then pull down to your local. This will seriously reduce the risk of conflicts. (And once there are multiple people working frequently on the front or the backend, this will greatly aid development! Don't want you to hotfix a bug that's already squashed, for example.)
 
 If you have any questions, PLEASE ask Maia! She will do her best to answer them.
-
----
-
-###### Colophon
-
-These files are licensed under a to-be-determined open-source license. However, trust me, you don't want them in the state they're in. Unless you want to help us build it. In which case, get in touch!
