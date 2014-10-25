@@ -1,6 +1,7 @@
 The Backend
 ===========
-This is the REST service which supports the front-end application.
+This is a REST service written in Python, Flask and SQLAlchemy
+which supports the front-end PlanetLab application.
 
 The full API spec is [available here.](API_DOCS.md)
 
@@ -15,7 +16,9 @@ Quick Start for Development
 * pip: https://pypi.python.org/pypi/pip 
 * Foreman: https://github.com/ddollar/foreman
 * PostgreSQL 9.3: http://www.postgresql.org
-* An AWS account and S3 bucket for hosting static content: http://aws.amazon.com
+* An AWS account, S3 bucket and CloudFront distribution for
+hosting static content: http://aws.amazon.com
+* (optional) graphviz for generating database schema diagrams
 
 ###Fulfilling the Requirements on a Mac
 * Install the package manager Homebrew: http://brew.sh
@@ -28,6 +31,7 @@ Quick Start for Development
   ~/Library/LaunchAgents/
 * Start PostgreSQL now:
   launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
+* (optional) Install graphviz: brew install graphviz
 
 ###Fulfilling the Requirements on Ubuntu
 * Install Python: sudo apt-get install python
@@ -45,6 +49,7 @@ http://www.postgresql.org/download/linux/ubuntu/
 where 'your username' is your linux username (whatever pops out from a whoami)
 * Install PostgreSQL and Python dev headers:
   sudo apt-get install libpq-dev postgresql-server-dev-9.3 python-dev
+* (optional) Install graphviz: sudo apt-get install graphviz
 
 ###Creating your S3 Bucket
 Please read https://devcenter.heroku.com/articles/s3 for an overview of
@@ -67,7 +72,7 @@ The relevant steps are:
     </CORSRule>
 </CORSConfiguration>
 ```
-* Upload a file called 'default-avatar.jpg' into the bucket
+* Upload an image of your choice named 'default-avatar.jpg' into the bucket
 * Right click 'default-avatar.jpg' and click the 'Make Public' button
 * On the security credentials tab: https://console.aws.amazon.com/iam/#users
   create an IAM user with permissions to access S3 using a policy like:
@@ -92,6 +97,16 @@ where 'your-bucket-name' is the bucket you created above
 * Hold onto the access and secret keys for this IAM user --
   you'll need them soon
 
+###Creating your CloudFront Distribution
+* Go to https://console.aws.amazon.com/cloudfront/home
+* Click 'Create Distribution'
+* Click 'Continue'
+* Click the 'Origin Domain Name' input box, a drop-down should appear.
+Select the S3 bucket you just created.
+* The default options are all fine, click 'Create Distribution' at the bottom.
+* Take note of your distribution's domain name, you will need it soon.
+It should be something like r5cqxy3728842.cloudfront.net
+
 ###First Run:
 * pip install virtualenv
 * git clone \<your fork of the repo\>
@@ -101,15 +116,17 @@ where 'your-bucket-name' is the bucket you created above
 * pip install -r backend/requirements.txt
 * pip install -r backend/test-requirements.txt
 * createdb parklab
-* edit the .dev\_env file so that it contains your correct bucket name and
-  credentials in the fields
+* edit the .dev\_env file so that it contains your correct CloudFront domain,
+  bucket name and AWS credentials in the fields
+  CLOUDFRONT\_URL,
   S3\_BUCKET,
   AWS\_ACCESS\_KEY\_ID and
   AWS\_SECRET\_ACCESS\_KEY
 
 #####NEVER COMMIT YOUR KEYS INTO THE REPO
+######issue this command to prevent you from accidentally doing so: git update-index --assume-unchanged .dev\_env
 
-* foreman start create\_db -e .dev\_env
+* foreman run create\_db -e .dev\_env
 * foreman start dev\_server -e .dev\_env
 
 The REST service is now available at [http://localhost:5000](http://localhost:5000)
@@ -126,8 +143,11 @@ The REST service is now available at [http://localhost:5000](http://localhost:50
 * foreman start dev\_server -e .dev\_env
 
 ###Other Utilities:
-* "foreman run tests -e .test\_env"
+* "foreman run be_tests -e .test\_env"
   runs the unit tests and outputs coverage information (the -e .test\_env bit is important!)
 * "foreman run bash -e .dev\_env"
   gives you a shell session with your environment set up to run the REST service
 * "foreman run flush\_db -e .dev\_env" drops and recreates the db schema
+* "bin/db\_diagram" generates database schema diagrams in PNG and
+  graphviz's .dot formats in the current directory named
+  'schema.png' and 'schema.dot' respectively

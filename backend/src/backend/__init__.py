@@ -3,11 +3,11 @@
 
 import flask
 import flask_babel
+import flask_login
 import flask_restful
 import flask_sqlalchemy
 import flask_user
 import logging
-import traceback
 
 
 app = flask.Flask(__name__)
@@ -27,6 +27,7 @@ if not app.debug:
 # We have to import these after defining app, api and db as these
 # imports will be looking for those variables.
 import backend.common.auth as auth
+import backend.common.response as response
 import backend.missions.views as mission_views
 import backend.organizations.views as organization_views
 import backend.quests.views as quest_views
@@ -46,58 +47,22 @@ def index():
 
 @app.route('/app')
 @flask_user.login_required
+@response.no_cache
 def app_page():
     """Return the javascript for the app."""
     return app.send_static_file('app.html')
 
-@app.route('/logout')
+@app.route('/current-user')
+def user_info():
+    """Return basic info about the currently logged-in user."""
+    return flask.jsonify({'user_id': flask.session.get('user_id')})
+
+@app.route('/logout', methods=('PUT',))
 def logout():
     """Clear the session and return the index page."""
+    flask_login.logout_user()
     flask.session.clear()
-    return app.send_static_file('index.html')
-
-@app.route('/avatar-example')
-@flask_user.login_required
-def update_avatar():
-    """Example showing how to use s3 for uploading avatar images."""
-    user_id = auth.current_user_id()
-    user_row = db.session.query(
-            user_models.User.name,
-            user_models.User.email,
-            user_models.User.description,
-            user_models.User.avatar_url).filter_by(
-                    id=user_id).first()
-    if user_row is None:
-        # this really should not happen -- the user would have had
-        # to have been deleted without killing the session
-        return flask.redirect(flask.url_for('login'))
-    else:
-        return flask.render_template(
-                'avatar_example.html',
-                user_id=user_id,
-                name=user_row[0],
-                email=user_row[1],
-                description=user_row[2],
-                avatar_url=user_row[3],
-                user_url=api.url_for(user_views.User, user_id=user_id))
-
-
-def error_handler(error, status_code=500, payload=None, debug=app.debug):
-    """Generic handler to return an exception as a json response."""
-    app.logger.exception(error)
-
-    if debug:
-        response = {'message': error.message,
-                'traceback': traceback.format_exc()}
-    else:
-        response = {'message': 'server error'}
-
-    if payload is not None:
-        response.update(payload)
-
-    response = flask.jsonify(response)
-    response.status_code = status_code
-    return response
+    return flask.make_response()
 
 @app.errorhandler(Exception)
 def other_error(error):
@@ -106,7 +71,7 @@ def other_error(error):
     This must be the last declared errorhandler or else it will
     swallow up other errorhandlers.
     """
-    return error_handler(error, payload={'type': 'general error'})
+    return response.error_handler(error, payload={'type': 'general error'})
 
 
 api.add_resource(user_views.User, '/v1/users/<int:user_id>')
@@ -114,29 +79,29 @@ api.add_resource(
         user_views.UserAvatar, '/v1/users/<int:user_id>/avatar/<file_name>')
 
 api.add_resource(mission_views.Mission, '/v1/missions/<int:mission_id>')
-api.add_resource(mission_views.MissionList, '/v1/missions/')
+api.add_resource(mission_views.MissionList, '/v1/missions')
 api.add_resource(
-        mission_views.MissionUserList, '/v1/users/<int:user_id>/missions/')
+        mission_views.MissionUserList, '/v1/users/<int:user_id>/missions')
 
 api.add_resource(quest_views.Quest, '/v1/quests/<int:quest_id>')
-api.add_resource(quest_views.QuestList, '/v1/quests/')
+api.add_resource(quest_views.QuestList, '/v1/quests')
 
 api.add_resource(
         quest_views.QuestStaticAsset,
         '/v1/quests/<int:quest_id>/uploads/<file_name>')
 api.add_resource(
-        quest_views.QuestStaticAssets, '/v1/quests/<int:quest_id>/uploads/')
+        quest_views.QuestStaticAssets, '/v1/quests/<int:quest_id>/uploads')
 
-api.add_resource(quest_views.QuestUserList, '/v1/users/<int:user_id>/quests/')
+api.add_resource(quest_views.QuestUserList, '/v1/users/<int:user_id>/quests')
 api.add_resource(
         quest_views.QuestMissionLink,
         '/v1/missions/<int:left_id>/quests/<int:right_id>')
 api.add_resource(
         quest_views.QuestMissionLinkList,
-        '/v1/missions/<int:mission_id>/quests/')
+        '/v1/missions/<int:mission_id>/quests')
 
 api.add_resource(quest_views.Tag, '/v1/quest-tags/<int:tag_id>')
-api.add_resource(quest_views.TagList, '/v1/quest-tags/')
+api.add_resource(quest_views.TagList, '/v1/quest-tags')
 api.add_resource(
         quest_views.QuestTagLink,
         '/v1/quests/<int:left_id>/tags/<int:right_id>')
@@ -146,7 +111,7 @@ api.add_resource(
         '/v1/quests/<int:quest_id>/questions/<int:question_id>')
 api.add_resource(
         question_views.QuestionList,
-        '/v1/quests/<int:parent_id>/questions/')
+        '/v1/quests/<int:parent_id>/questions')
 api.add_resource(
         question_views.QuestionView,
         '/v1/questions/<int:question_id>')
@@ -156,7 +121,7 @@ api.add_resource(
         '/v1/questions/<int:question_id>/answers/<int:answer_id>')
 api.add_resource(
         question_views.AnswerList,
-        '/v1/questions/<int:parent_id>/answers/')
+        '/v1/questions/<int:parent_id>/answers')
 
 api.add_resource(
         question_views.MultipleChoice,
@@ -164,12 +129,12 @@ api.add_resource(
             '<int:multiple_choice_id>')
 api.add_resource(
         question_views.MultipleChoiceList,
-        '/v1/questions/<int:parent_id>/multiple_choices/')
+        '/v1/questions/<int:parent_id>/multiple_choices')
 
 api.add_resource(
         organization_views.Organization,
         '/v1/organizations/<int:organization_id>')
-api.add_resource(organization_views.OrganizationList, '/v1/organizations/')
+api.add_resource(organization_views.OrganizationList, '/v1/organizations')
 api.add_resource(
         organization_views.OrganizationUserLink,
         '/v1/organizations/<int:left_id>/users/<int:right_id>')

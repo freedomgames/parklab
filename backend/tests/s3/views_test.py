@@ -31,6 +31,7 @@ class S3Test(harness.TestHarness):
         self.assertEqual(signature, {
             'file_name': 'snake.png',
             's3_url': 'https://bucket.s3.amazonaws.com/snake.png',
+            'cdn_url': 'http://clouds.cloudfront.net/snake.png',
             'upload_args': {
                 'url': 'https://bucket.s3.amazonaws.com/',
                 'method': 'POST',
@@ -128,6 +129,23 @@ class S3Test(harness.TestHarness):
                     backend.quest_views.QuestStaticAsset,
                     quest_id='4', file_name='a'))
         self.assertEqual(resp.status_code, 200)
+
+    @mock.patch.object(s3, 'get_conn')
+    def test_get_bucket(self, m_get_conn):
+        """Test the get_bucket function."""
+
+        class FakeConn(object):
+            """Mock object for an s3 connection."""
+
+            @staticmethod
+            def get_bucket(bucket_name, validate=None):
+                """Make sure get_bucket is passed good arguments."""
+                self.assertEqual(bucket_name, 'bucket')
+                self.assertFalse(validate)
+
+        m_get_conn.return_value = FakeConn()
+        s3.get_bucket()
+
 
 if __name__ == '__main__':
     unittest.main()

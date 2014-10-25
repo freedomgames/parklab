@@ -7,6 +7,7 @@ pip-log.txt
 
 # Unit test / coverage reports
 .coverage
+/cover
 .tox
 nosetests.xml
 
@@ -19,6 +20,15 @@ nosetests.xml
 ehthumbs.db
 Thumbs.db
 
+# vendor
+bower_components
+node_modules
+
 # editor files
 *.swp
 .idea/
+\#*#
+
+# db schema images
+/schema.dot
+/schema.png
