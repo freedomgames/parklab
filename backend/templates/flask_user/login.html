@@ -2,7 +2,9 @@
 
 {% block content %}
 {% from "flask_user/_macros.html" import render_field, render_submit_field %}
-<h1>{%trans%}Sign in{%endtrans%}</h1>
+<div style="height:40px; "> </div>
+<img src="http://d1fpjxtkxle8on.cloudfront.net/header-pl-logo.png"> 
+<h1 >{%trans%}Sign in{%endtrans%}</h1>
 
 <form action="" method="POST" class="form" role="form">
     {{ form.hidden_tag() }}
@@ -54,7 +56,7 @@
     </div>
 
     {# Submit button #}
-    {{ render_submit_field(form.submit, tabindex=180) }}
+    {{ render_submit_field(form.submit, tabindex=300) }}
 </form>
 
 {% endblock %}

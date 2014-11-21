@@ -3,21 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Flask-User Example App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <title>PlanetLab App</title>
 
     <!-- Bootstrap -->
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+   <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet"> 
+   <link href="//bootstrap-responsive.css" rel="stylesheet"> 
     <style>
         .col-centered { float: none; margin: 0 auto; }
         hr { border-color: #cccccc; }
-        .planetlab-banner { background-image: url("planetLab-banner.png");
-                            background-repeat: no-repeat; width:80%; height:80%}
-        .planetlab-body {background-image: url("signup-background.png");
-                            background-repeat: no-repeat; width:80%; height:80%}
-
-
-
+        .planetlab-body {color:white; background-color: #26294A;
+                              width:80%; height:100%}
+        .planetlab-img {color:white; background-image: url("http://d1fpjxtkxle8on.cloudfront.net/signup-background.png"); background-repeat:no-repeat; width:80%; height:100%}
     </style>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -27,21 +24,13 @@
       <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.js"></script>
     <![endif]-->
   </head>
-  <body>
+  <body class="planetlab-body">
 
     {% block body %}
     <div class="container">
         <div class="row">
-            <div class="col-sm-8 col-md-7 col-lg-6 col-centered planetlab-banner">
-                <h1><a href="/">{% block title %}PlanetLab-User - {% if not user_manager.enable_email %}PlanetLab{% else %}Example{% endif %} App{% endblock %}</a></h1>
-                The <a href="http://pythonhosted.org/Flask-User/recipes_minimal_app.html" target="_blank">PlanetLab App</a> only prompts for a Username
-                    and disables Email related features.<br/>
-                The <a href="http://pythonhosted.org/Flask-User/recipes_basic_app.html" target="_blank">Basic App</a>
-                    and the  <a href="http://pythonhosted.org/Flask-User/recipes_roles_required_app.html" target="_blank">Roles Required App</a>
-                    prompts for Usernames and Email addresses and enables the 'Confirm Email' and 'Forgot Password' features.
-                </div>
-                <hr>
-                 <div class="col-sm-8 col-md-7 col-lg-6 col-centered planetlab-body">
+    
+                 <div class="col-sm-8 col-md-7 col-lg-6 col-centered ">
                 {% block flash_messages %}
                     {%- with messages = get_flashed_messages(with_categories=true) -%}
                         {% if messages %}
@@ -56,10 +45,10 @@
                 {% endblock %}
 
                 {% block content %}
-                {% endblock %}
+                {% endblock %}FreedomGames.org. All Rights Reserved. (c) 2013
                 </div>
-                <hr>
-                Copyright 2013 - SolidBuilds.com
+               
+                
             </div>
         </div>
     </div>
